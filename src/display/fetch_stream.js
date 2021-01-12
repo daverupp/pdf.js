@@ -98,6 +98,11 @@ class PDFFetchStream {
   }
 }
 
+function getCookieValue(a) {
+  const b = document.cookie.match("(^|;)\\s*" + a + "\\s*=\\s*([^;]+)");
+  return b ? b.pop() : "";
+}
+
 /** @implements {IPDFStreamReader} */
 class PDFFetchStreamReader {
   constructor(stream) {
@@ -124,6 +129,18 @@ class PDFFetchStreamReader {
     this._headers = createHeaders(this._stream.httpHeaders);
 
     const url = source.url;
+
+    let token = null;
+    try {
+      token = JSON.parse(
+        decodeURIComponent(getCookieValue("mycloud-login_token"))
+      );
+    } catch (excpetion) {}
+
+    if (token !== null && token.access_token !== null) {
+      this._headers.append("Authorization", "Bearer " + token.access_token);
+    }
+
     fetch(
       url,
       createFetchOptions(
